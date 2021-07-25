@@ -1,16 +1,4 @@
-# import network
-# ap = network.WLAN(network.AP_IF) # create access-point interface
-# ap.config(essid='AutoBoat') # set the ESSID of the access point
-# ap.config(max_clients=10) # set how many clients can connect to the network
-# ap.active(True)         # activate the interface
-
-# import usocket as socket
-# import uselect as select
-
-try:
-    import uasyncio as asyncio
-except:
-    import asyncio
+import uasyncio as asyncio
 
 import time
 import math
@@ -98,7 +86,7 @@ class Autoboat:
     async def main(self):
         asyncio.create_task(self.adc_reader())
         asyncio.create_task(self.blinker())
-        # asyncio.create_task(self.api_server())
+        asyncio.create_task(self.api_server())
       
 
         while True:
@@ -108,14 +96,19 @@ class Autoboat:
     async def handle_echo(reader, writer):
         print("here")
         data = await reader.read(100)
-        message = data.decode()
-        addr = writer.get_extra_info('peername')
+        try:
+            message = data.decode()
+            addr = writer.get_extra_info('peername')
 
-        print("Received  from ", message, addr)
+            print("Received  from ", message, addr)
 
-        print("Send: ", message)
-        writer.write(data)
-        await writer.drain()
+            print("Send: ", message)
+            writer.write(data)
+            await writer.drain()
+        except Exception as e:
+            print("Receiving error ", e)
+            writer.write("Receiving error " + str(e))
+            await writer.drain()
 
         print("Close the connection")
         writer.close()
@@ -126,6 +119,8 @@ class Autoboat:
 
         # addr = server.sockets[0].getsockname()
         print('Serving on ')
+        # print(ap.ifconfig())
 
         async with server:
-            await server.serve_forever()
+            while True:
+                await asyncio.sleep(0.5)
